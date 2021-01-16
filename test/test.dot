@@ -1,0 +1,19 @@
+digraph graph_name {
+    //format
+    //for Issuer
+    // xlabel = "label:YOUR_ISSUER_LABEL,seed:YOUR_WALLET_SEED,wallet-name:YOUR_WALLET_NAME(OPTIONAL),wallet_key:YOUR_WALLET_KEY"
+
+    Issuer1 [label = "Issuer", xlabel = "label:aaa,seed:aaa,wallet-key:aaa"]
+    Issuer2 [label = "Issuer", xlabel = "label:bbb,seed:bbb,wallet0key:bbb"]
+    Holder1 [label = "Holder", xlabel = "attr1:hoge"]
+    Holder2 [label = "Holder", xlabel = "attr1:piyo"]
+    Verifier [label = "Verifier", xlabel = "attr1:piyo"]
+
+    Issuer1 -> Holder1;
+    Issuer1 -> Holder2;
+    Issuer2 -> Holder1;
+    Issuer2 -> Holder2;
+
+    Holder1 -> Verifier;
+    Holder2 -> Verifier;
+}

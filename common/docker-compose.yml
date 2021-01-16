@@ -1,0 +1,33 @@
+version: '3'
+services: 
+  issuer1:
+    build: 
+      context: ./aries-cloudagent-python
+      dockerfile: ./docker/Dockerfile.run
+    ports: 
+      - 8000:8000
+      - 11000:11000
+    command: >
+      start
+      --label Issuer1 
+      --inbound-transport http 0.0.0.0 8000 
+      --outbound-transport http 
+      --admin 0.0.0.0 11000 
+      --admin-insecure-mode 
+      --genesis-url http://192.168.3.16:9000/genesis 
+      --seed Issuer00000000000000000000000000 
+      --wallet-type indy 
+      --wallet-name Issuer1 
+      --wallet-key welldone 
+      --endpoint http://192.168.3.16:8000/ 
+      --public-invites 
+      --auto-accept-invites 
+      --auto-accept-requests 
+      --auto-ping-connection 
+      --debug-connections
+    volumes: 
+      - "./aries-cloudagent-python/logs/:/home/indy/logs"
+networks:
+  default:
+    external: 
+      name: shared-network01
