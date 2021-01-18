@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 )
 
-func validateIsDotfile(input string) error{
+func validateIsDotfile(input string) error {
 	_, err := os.Stat(input)
-	if os.IsNotExist(err){
+	if os.IsNotExist(err) {
 		return errors.New("the file is not found")
 	}
 
@@ -20,9 +20,9 @@ func validateIsDotfile(input string) error{
 	return nil
 }
 
-func validateIsCsvfile(input string) error{
+func validateIsCsvfile(input string) error {
 	_, err := os.Stat(input)
-	if os.IsNotExist(err){
+	if os.IsNotExist(err) {
 		return errors.New("the file is not found")
 	}
 
@@ -34,8 +34,15 @@ func validateIsCsvfile(input string) error{
 
 func validateExistFileAndDirectory(input string) error {
 	_, err := os.Stat(input)
-	if os.IsNotExist(err){
+	if os.IsNotExist(err) {
 		return errors.New("the file is not found")
+	}
+	return nil
+}
+
+func validateYesOrNo(input string) error {
+	if input != "y" || input != "N" {
+		return errors.New("enter y or N")
 	}
 	return nil
 }
@@ -48,7 +55,7 @@ func validateExistDockerNetwork(input string) error {
 	}
 
 	out, err := exec.Command("docker", parameter...).Output()
-	if err != nil{
+	if err != nil {
 		return errors.New("network name is duplicated")
 	}
 	fmt.Println(out)

@@ -10,12 +10,12 @@ import (
 	"path/filepath"
 )
 
-func BuildVonNetwork(workdir string) error{
+func BuildVonNetwork(workdir string) error {
 	workdir = filepath.Join(workdir, "von-network")
 	os.Chdir(workdir)
 	cmd := exec.Command("./manage", "build")
 	fl, err := pty.Start(cmd)
-	if err != nil{
+	if err != nil {
 		return errors.New("can't build von-network")
 	}
 	io.Copy(os.Stdout, fl)
@@ -27,22 +27,22 @@ func StartVonNetwork(workdir string) error {
 	os.Chdir(workdir)
 	cmd := exec.Command("./manage", "start")
 	fl, err := pty.Start(cmd)
-	if err != nil{
+	if err != nil {
 		return errors.New("can't start von-network")
 	}
 	io.Copy(os.Stdout, fl)
 	return nil
 }
 
-func GetMyIPAddress() (string, error){
+func GetMyIPAddress() (string, error) {
 	ifaces, err := net.Interfaces()
-	if err != nil{
+	if err != nil {
 		return "", err
 	}
 
-	for _, i := range ifaces{
+	for _, i := range ifaces {
 		addrs, err := i.Addrs()
-		if err != nil{
+		if err != nil {
 			return "", err
 		}
 		for _, addr := range addrs {
@@ -59,9 +59,25 @@ func GetMyIPAddress() (string, error){
 	return "", nil
 }
 
-func IsExistDir(path string) bool{
-	if _, err := os.Stat(path); !os.IsNotExist(err){
+func IsExistDir(path string) bool {
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
 		return true
 	}
 	return false
+}
+
+func RemoveAllFilesAtWorkDir(workdir string) error {
+	parameter := []string{
+		"-rf",
+		"./*",
+	}
+
+	os.Chdir(workdir)
+	cmd := exec.Command("rm", parameter...)
+	fl, err := pty.Start(cmd)
+	if err != nil {
+		return err
+	}
+	io.Copy(os.Stdout, fl)
+	return nil
 }
