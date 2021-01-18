@@ -152,5 +152,12 @@ func buildAgent() error {
 		return err
 	}
 
+	fmt.Println("Up Agent...")
+	err = commander.DockerComposeUpAtWorkdir(workdir)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("done!")
 	return nil
 }

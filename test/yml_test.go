@@ -13,28 +13,28 @@ func TestRenameNetworks(t *testing.T) {
 	ledger.RenameNetworks("/home/tuple/GolandProjects/cli/test/", "shared-network01")
 }
 
-func TestGenerateDockerCompose(t *testing.T){
+func TestGenerateDockerCompose(t *testing.T) {
 	//agent.ConvertFromGraph("/home/tuple/GolandProjects/cli/test/test.dot")
 }
 
-func TestSimpleRead(t *testing.T){
+func TestSimpleRead(t *testing.T) {
 	agent.SimpleRead("/home/tuple/GolandProjects/cli/common/docker-compose.yml")
 }
 
-func TestConvert(t *testing.T) {
-	workdir := "/home/tuple/GolandProjects/cli/test/"
-	repoName := "aries-cloudagent-python"
-	if commander.IsExistDir(filepath.Join(workdir, repoName)) == false {
-		agent.ConvertFromGraph(
-			"/home/tuple/GolandProjects/cli/test/test.dot",
-			"/home/tuple/GolandProjects/cli/sandbox",
-			"shared-exp-net",
-			"192.168.3.16",
-		)
-	}
-}
+//func TestConvert(t *testing.T) {
+//	workdir := "/home/tuple/GolandProjects/cli/test/"
+//	repoName := "aries-cloudagent-python"
+//	if commander.IsExistDir(filepath.Join(workdir, repoName)) == false {
+//		agent.ConvertFromGraph(
+//			"/home/tuple/GolandProjects/cli/test/test.dot",
+//			"/home/tuple/GolandProjects/cli/sandbox",
+//			"shared-exp-net",
+//			"192.168.3.16",
+//		)
+//	}
+//}
 
-func TestIsExist(t *testing.T){
+func TestIsExist(t *testing.T) {
 	workdir := "/home/tuple/GolandProjects/cli/test/"
 	repoAgent := "aries-cloudagent-python"
 	repoVon := "von-network"
