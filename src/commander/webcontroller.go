@@ -3,6 +3,7 @@ package commander
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
@@ -10,8 +11,8 @@ import (
 )
 
 type PublicDid struct {
-	Did string
-	Seed string
+	Did    string
+	Seed   string
 	Verkey string
 }
 
@@ -21,25 +22,30 @@ func init() {
 	rand.Seed(time.Now().UnixNano())
 }
 
-func RegisterDID(agentNameList []string) (map[string]string, error){
+func RegisterDID(agentNameList []string) (map[string]string, error) {
 	agentAndSeed, err := getSeedList(agentNameList)
 	if err != nil {
 		return nil, err
 	}
+	//dbp(agentAndSeed)
 
 	agentAndDid := map[string]string{}
-	for agent, seed := range agentAndSeed{
+	for agent, seed := range agentAndSeed {
 		publicDid, err := ComLedger(agent, seed)
-		if err != nil{
-			return nil, err
+		fmt.Println("Waiting for next POST...")
+		time.Sleep(time.Second * 5)
+		if err != nil {
+			//return nil, err
+			panic(err)
 		}
 		agentAndDid[agent] = publicDid
 	}
-
-	return agentAndDid, nil
+	//fmt.Println("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAa")
+	//dbp(agentAndSeed)
+	return agentAndSeed, nil
 }
 
-func ComLedger(alias string, seed string) (string, error){
+func ComLedger(alias string, seed string) (string, error) {
 	url := "http://localhost:9000/register"
 
 	jsonData := `{"alias":"` + alias + `","seed":"` + seed + `","role":"TRUST_ANCHOR"}`
@@ -49,7 +55,7 @@ func ComLedger(alias string, seed string) (string, error){
 		url,
 		bytes.NewBuffer([]byte(jsonData)),
 	)
-	if err != nil{
+	if err != nil {
 		return "", err
 	}
 
@@ -58,7 +64,7 @@ func ComLedger(alias string, seed string) (string, error){
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
-	if err != nil{
+	if err != nil {
 		return "", err
 	}
 	defer resp.Body.Close()
@@ -67,26 +73,34 @@ func ComLedger(alias string, seed string) (string, error){
 
 	var d PublicDid
 	err = json.Unmarshal(body, &d)
-	if err != nil{
+	if err != nil {
 		return "", err
 	}
 
 	return d.Did, nil
 }
 
-func getSeedList(agentNameList []string) (map[string]string, error){
+func getSeedList(agentNameList []string) (map[string]string, error) {
 	seedList := map[string]string{}
-	for _, name := range agentNameList{
+	for _, name := range agentNameList {
 		seedList[name] = getRandomString(32)
 	}
 	return seedList, nil
 }
 
-func getRandomString(n int) string{
+func getRandomString(n int) string {
 	b := make([]rune, n)
 	for i := range b {
 		b[i] = letterRunes[rand.Intn(len(letterRunes))]
 	}
 
 	return string(b)
+}
+
+func dbp(seed map[string]string) {
+	if seed != nil {
+		fmt.Println(seed)
+	} else {
+		panic(seed)
+	}
 }

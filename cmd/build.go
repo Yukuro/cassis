@@ -27,6 +27,7 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"path/filepath"
+	"time"
 )
 
 // buildCmd represents the build command
@@ -62,18 +63,18 @@ func buildAgent() error {
 	//get .dot file
 	fmt.Println("Enter your dot file...")
 	dotFilepath, err := common.PromptForDot("Dot")
-	if err != nil{
+	if err != nil {
 		return err
 	}
 
 	analyse.Browse(dotFilepath)
 
 	//Does Issuer - Holder =~ VC exist ?
-	if analyse.RequireVC(dotFilepath){
+	if analyse.RequireVC(dotFilepath) {
 		fmt.Println("detected Issuer - Holder relation...")
 
 		csvFilepath, err := common.PromptForCsv("Csv")
-		if err != nil{
+		if err != nil {
 			return err
 		}
 		fmt.Printf("Your csv file is %v\n", csvFilepath)
@@ -82,7 +83,7 @@ func buildAgent() error {
 	fmt.Println("Start building Network and Agent...")
 
 	workdir, err := common.PromptForFileAndDirectory("Workdir")
-	if err != nil{
+	if err != nil {
 		return err
 	}
 
@@ -101,12 +102,12 @@ func buildAgent() error {
 	fmt.Println("Building docker network...")
 	fmt.Println("Enter network name")
 	networkName, err := common.PromptString("NW name")
-	if err != nil{
+	if err != nil {
 		return err
 	}
 
 	networkHash, err := commander.BuildDockerNetwork(networkName)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	fmt.Printf("created %v : %v\n", networkName, networkHash)
@@ -118,32 +119,36 @@ func buildAgent() error {
 
 	fmt.Println("build and start network")
 	err = commander.BuildVonNetwork(workdir)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 	err = commander.StartVonNetwork(workdir)
-	if err != nil{
+	if err != nil {
 		return err
 	}
+
+	fmt.Println("Waiting for boot ledger...")
+	time.Sleep(time.Second * 30)
 
 	//register public DID to ledger
 	fmt.Println("Registering to ledger...")
 	agentNameList := analyse.GetAgentNameList(dotFilepath)
-	agentSeedList, err := commander.RegisterDID(agentNameList)
-	fmt.Println(agentSeedList)
+
+	agentNameAndSeed, err := commander.RegisterDID(agentNameList)
+	//fmt.Println(agentSeedList)
 
 	fmt.Println("[Agent]")
 	//testtesttest := commander.IsExistDir(filepath.Join(workdir,"aries-cloudagent-python"))
 	//fmt.Println(testtesttest)
-	if commander.IsExistDir(filepath.Join(workdir,"aries-cloudagent-python")) == false{
+	if commander.IsExistDir(filepath.Join(workdir, "aries-cloudagent-python")) == false {
 		err = commander.CloneFromAcaPy(workdir, "https://github.com/Yukuro/aries-cloudagent-python.git")
 		if err != nil {
 			return err
 		}
 	}
 	fmt.Println("Converting...")
-	err = agent.ConvertFromGraph(dotFilepath, workdir, networkName, "192.168.3.16") //TODO get IP from command
-	if err != nil{
+	err = agent.ConvertFromGraph(dotFilepath, workdir, networkName, "192.168.3.15", agentNameAndSeed) //TODO get IP from command
+	if err != nil {
 		return err
 	}
 

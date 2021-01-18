@@ -7,9 +7,9 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "cuic",
-	Short: "You can use Indy casualy",
-	Long: "You can use Indy casualy",
+	Use:   "cassis",
+	Short: "CAsual SSI System",
+	Long:  "CAsual SSI System",
 	Run: func(cmd *cobra.Command, args []string) {
 
 	},
@@ -22,6 +22,6 @@ func Execute() {
 	}
 }
 
-func init()  {
+func init() {
 	cobra.OnInitialize()
 }
