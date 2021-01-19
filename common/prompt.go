@@ -8,12 +8,12 @@ import (
 
 func PromptForDot(name string) (string, error) {
 	prompt := promptui.Prompt{
-		Label: name,
+		Label:    name,
 		Validate: validateIsDotfile,
 	}
 
 	path, err := runAndConvAbs(prompt)
-	if err != nil{
+	if err != nil {
 		return "", err
 	}
 	return path, nil
@@ -21,12 +21,12 @@ func PromptForDot(name string) (string, error) {
 
 func PromptForCsv(name string) (string, error) {
 	prompt := promptui.Prompt{
-		Label: name,
+		Label:    name,
 		Validate: validateIsCsvfile,
 	}
 
 	path, err := runAndConvAbs(prompt)
-	if err != nil{
+	if err != nil {
 		return "", err
 	}
 	return path, nil
@@ -34,27 +34,37 @@ func PromptForCsv(name string) (string, error) {
 
 func PromptForFileAndDirectory(name string) (string, error) {
 	prompt := promptui.Prompt{
-		Label: name,
+		Label:    name,
 		Validate: validateExistFileAndDirectory,
 	}
 
 	path, err := runAndConvAbs(prompt)
-	if err != nil{
+	if err != nil {
 		return "", err
 	}
 	return path, nil
 }
 
-func PromptConfirm(name string)(string, error){
+func PromptConfirm(name string) (string, error) {
 	prompt := promptui.Prompt{
-		Label: name,
+		Label:     name,
 		IsConfirm: true,
 	}
 
 	return prompt.Run()
 }
 
-func PromptString(name string)(string, error){
+func PromptSelect(name string, item []string) (string, error) {
+	prompt := promptui.Select{
+		Label: name,
+		Items: item,
+	}
+
+	_, result, err := prompt.Run()
+	return result, err
+}
+
+func PromptString(name string) (string, error) {
 	prompt := promptui.Prompt{
 		Label: name,
 	}
@@ -62,21 +72,21 @@ func PromptString(name string)(string, error){
 	return prompt.Run()
 }
 
-func PromptNetworkName(name string)(string, error){
+func PromptNetworkName(name string) (string, error) {
 	prompt := promptui.Prompt{
-		Label: name,
+		Label:    name,
 		Validate: validateExistDockerNetwork,
 	}
 	return prompt.Run()
 }
 
-func runAndConvAbs(p promptui.Prompt) (string, error){
+func runAndConvAbs(p promptui.Prompt) (string, error) {
 	path, err := p.Run()
-	if err != nil{
+	if err != nil {
 		return "", errors.New("can't enter dir")
 	}
 	path, err = filepath.Abs(path)
-	if err != nil{
+	if err != nil {
 		return "", errors.New("can't convert relative to abs")
 	}
 	return path, nil

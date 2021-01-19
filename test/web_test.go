@@ -17,17 +17,17 @@ import (
 //	fmt.Println(commander.RegisterDid(agentNameList))
 //}
 
-func TestComLedger(t *testing.T){
+func TestComLedger(t *testing.T) {
 	alias := "Issuer123"
 	seed := "mGbYfizQPdrrxiPcNaKkfHdDBKboPEhA"
 	publicDid, err := commander.ComLedger(alias, seed)
-	if err != nil{
+	if err != nil {
 		panic(err)
 	}
 	fmt.Println(publicDid)
 }
 
-func TestRegisterDid(t *testing.T){
+func TestRegisterDid(t *testing.T) {
 	agentNameList := []string{
 		"Issuer_fRGAu",
 		"Issuer_wZCDm",
@@ -37,9 +37,20 @@ func TestRegisterDid(t *testing.T){
 	}
 
 	agentAndDid, err := commander.RegisterDID(agentNameList)
-	if err != nil{
+	if err != nil {
 		panic(err)
 	}
 
 	fmt.Println(agentAndDid)
+}
+
+func TestInvitation(t *testing.T) {
+	targetUrl := "http://localhost:11000"
+	agentName := "Issuer1"
+	connectionId, body, err := commander.InvitationToHolder(targetUrl, agentName)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(connectionId)
+	fmt.Println(body)
 }

@@ -164,8 +164,25 @@ func getAgentCommand(label string, ip string, seed string) string {
 	return cmd
 }
 
-//for debug
-func SimpleRead(yamlPath string) error {
+func GetServiceNameFromWorkdir(workdir string) ([]string, error) {
+	ymlPath := filepath.Join(workdir, "docker-compose.yml")
+	bytes, err := ioutil.ReadFile(ymlPath)
+	if err != nil {
+		return nil, err
+	}
+
+	d := DockerCompose{}
+	err = yaml.Unmarshal(bytes, &d)
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+
+	//for _, service := range d.Services
+}
+
+func simpleRead(yamlPath string) error {
 	bytes, err := ioutil.ReadFile(yamlPath)
 	if err != nil {
 		return errors.New("can't open yaml file")

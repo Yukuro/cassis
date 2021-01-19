@@ -16,6 +16,20 @@ type PublicDid struct {
 	Verkey string
 }
 
+type CreateInvitation struct {
+	ConnectionID  string     `json:"connection_id"`
+	Invitation    Invitation `json:"invitation"`
+	InvitationURL string     `json:"invitation_url"`
+	Alias         string     `json:"alias"`
+}
+type Invitation struct {
+	Type            string   `json:"@type"`
+	ID              string   `json:"@id"`
+	Label           string   `json:"label"`
+	RecipientKeys   []string `json:"recipientKeys"`
+	ServiceEndpoint string   `json:"serviceEndpoint"`
+}
+
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 func init() {
@@ -78,6 +92,51 @@ func ComLedger(alias string, seed string) (string, error) {
 	}
 
 	return d.Did, nil
+}
+
+func InvitationToHolder(targetUrl string, agentName string) (string, string, error) {
+	targetUrl = targetUrl + "/connections/create-invitation"
+
+	alias := fmt.Sprintf("%v_%v", agentName, getRandomString(5))
+
+	jsonData := `{"alias":"` + alias + `","auto_accept":true}`
+
+	req, err := http.NewRequest(
+		"POST",
+		targetUrl,
+		bytes.NewBuffer([]byte(jsonData)),
+	)
+	if err != nil {
+		return "", "", err
+	}
+
+	req.Header.Set("accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+
+	fmt.Printf("{\"alias\": \"%v\", \"auto_accept\": true} --> %v\n", alias, targetUrl)
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", "", err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+
+	var d CreateInvitation
+	err = json.Unmarshal(body, &d)
+	if err != nil {
+		return "", "", nil
+	}
+
+	connectionId := d.ConnectionID
+
+	bytes, err := json.Marshal(&d.Invitation)
+	if err != nil {
+		return "", "", nil
+	}
+
+	return connectionId, string(bytes), nil
 }
 
 func getSeedList(agentNameList []string) (map[string]string, error) {

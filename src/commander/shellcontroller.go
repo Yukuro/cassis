@@ -81,3 +81,11 @@ func RemoveAllFilesAtWorkDir(workdir string) error {
 	io.Copy(os.Stdout, fl)
 	return nil
 }
+
+func MapKeyToSlice(source map[string]string) []string {
+	var result []string
+	for key, _ := range source {
+		result = append(result, key)
+	}
+	return result
+}

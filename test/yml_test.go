@@ -17,9 +17,9 @@ func TestGenerateDockerCompose(t *testing.T) {
 	//agent.ConvertFromGraph("/home/tuple/GolandProjects/cli/test/test.dot")
 }
 
-func TestSimpleRead(t *testing.T) {
-	agent.SimpleRead("/home/tuple/GolandProjects/cli/common/docker-compose.yml")
-}
+//func TestSimpleRead(t *testing.T) {
+//	agent.SimpleRead("/home/tuple/GolandProjects/cli/common/docker-compose.yml")
+//}
 
 //func TestConvert(t *testing.T) {
 //	workdir := "/home/tuple/GolandProjects/cli/test/"
@@ -33,6 +33,14 @@ func TestSimpleRead(t *testing.T) {
 //		)
 //	}
 //}
+
+func TestGetServiceName(t *testing.T) {
+	workdir := "/home/tuple/GolandProjects/cli/sandbox/"
+	_, err := agent.GetServiceNameFromWorkdir(workdir)
+	if err != nil {
+		panic(err)
+	}
+}
 
 func TestIsExist(t *testing.T) {
 	workdir := "/home/tuple/GolandProjects/cli/test/"
