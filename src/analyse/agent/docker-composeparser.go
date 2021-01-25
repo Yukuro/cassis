@@ -90,13 +90,13 @@ func ConvertFromGraph(dotPath string, workdir string, networkName string, myIPAd
 
 	for _, node := range graph.Nodes.Nodes {
 		//fmt.Println(node)
-		label, attrs := attrToBetter(node.Attrs["label"], node.Attrs["xlabel"])
+		label, _ := attrToBetter(node.Attrs["label"], node.Attrs["xlabel"])
 		seed := agentNameAndSeed[node.Name]
-		fmt.Println(attrs)
+		//fmt.Println(attrs)
 		switch label {
 		case "Issuer":
 			issuerNum += 1
-			fmt.Printf("%v is Issuer\n", node.Name)
+			//fmt.Printf("%v is Issuer\n", node.Name)
 
 			//TODO interfaceとか使って書く
 			switch issuerNum {
@@ -122,11 +122,11 @@ func ConvertFromGraph(dotPath string, workdir string, networkName string, myIPAd
 
 		case "Holder":
 			holderNum += 1
-			fmt.Printf("%v is Holder\n", node.Name)
+			//fmt.Printf("%v is Holder\n", node.Name)
 
 		case "Verifier":
 			verifierNum += 1
-			fmt.Printf("%v is Verifier\n", node.Name)
+			//fmt.Printf("%v is Verifier\n", node.Name)
 
 		}
 	}
@@ -146,6 +146,12 @@ func ConvertFromGraph(dotPath string, workdir string, networkName string, myIPAd
 
 func attrToBetter(label string, xlabel string) (string, map[string]string) {
 	label = strings.Trim(label, "\"")
+
+	//TODO xlabelをもとに属性返す
+	if xlabel == "" {
+		return label, map[string]string{}
+	}
+
 	trimmed := strings.Trim(xlabel, "\"")
 	splitted := strings.Split(trimmed, ",")
 	attrs := map[string]string{}

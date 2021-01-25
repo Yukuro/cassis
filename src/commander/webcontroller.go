@@ -46,7 +46,7 @@ func RegisterDID(agentNameList []string) (map[string]string, error) {
 	agentAndDid := map[string]string{}
 	for agent, seed := range agentAndSeed {
 		publicDid, err := ComLedger(agent, seed)
-		fmt.Println("Waiting for next POST...")
+		fmt.Printf("Registering %v(seed: %v ) to ledger\n", agent, seed)
 		time.Sleep(time.Second * 5)
 		if err != nil {
 			//return nil, err

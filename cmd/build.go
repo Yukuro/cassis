@@ -60,48 +60,58 @@ func init() {
 }
 
 func buildAgent() error {
-	//get .dot file
-	fmt.Println("Enter your dot file...")
-	dotFilepath, err := common.PromptForDot("Dot")
+	workdir, err := common.PromptForFileAndDirectory("Enter your workdir")
 	if err != nil {
 		return err
 	}
 
-	analyse.Browse(dotFilepath)
+	//get .dot file
+	//fmt.Println("Enter your dot file...")
+	dotFilepath, err := common.PromptForDot("Enter your DOT file dir")
+	if err != nil {
+		return err
+	}
+
+	printProgressWithDot("Analysing", 3)
+	err = analyse.Browse(dotFilepath)
+	if err != nil {
+		return err
+	}
 
 	//Does Issuer - Holder =~ VC exist ?
-	if analyse.RequireVC(dotFilepath) {
-		fmt.Println("detected Issuer - Holder relation...")
+	vcRequired, err := analyse.RequireVC(dotFilepath)
+	if err != nil {
+		return err
+	}
+	if vcRequired {
+		//fmt.Println("detected Issuer - Holder relation...")
+		printWithNewLine("detected Issuer - Holder relation..")
 
-		csvFilepath, err := common.PromptForCsv("Csv")
+		//csvFilepath, err := common.PromptForCsv("Enter your CSV file dir")
+		_, err := common.PromptForCsv("Enter your CSV file dir") //TODO CSVの処理書く
 		if err != nil {
 			return err
 		}
-		fmt.Printf("Your csv file is %v\n", csvFilepath)
+		//fmt.Printf("Your csv file is %v\n", csvFilepath)
 	}
 
-	fmt.Println("Start building Network and Agent...")
-
-	workdir, err := common.PromptForFileAndDirectory("Workdir")
-	if err != nil {
-		return err
-	}
+	printWithNewLine("Start building Network and Agent...")
 
 	if commander.IsExistDir(filepath.Join(workdir, "von-network")) == false {
 		err = commander.CloneFromURL(workdir, "https://github.com/Yukuro/von-network.git")
 		if err != nil {
 			return err
 		}
-		fmt.Printf("cloned VON-Network in %v\n", workdir)
+		//fmt.Printf("cloned VON-Network in %v\n", workdir)
 	}
 
 	//fmt.Printf("Your dot file is %v\n", dotFilepath)
 	//fmt.Printf("Your workdir  is %v\n", workdir)
 
 	//start docker-network
-	fmt.Println("Building docker network...")
-	fmt.Println("Enter network name")
-	networkName, err := common.PromptString("NW name")
+	//fmt.Println("Building docker network...")
+	//fmt.Println("Enter network name")
+	networkName, err := common.PromptString("Enter the docker network name")
 	if err != nil {
 		return err
 	}
@@ -113,7 +123,7 @@ func buildAgent() error {
 	fmt.Printf("created %v : %v\n", networkName, networkHash)
 
 	//Start VON-NW
-	fmt.Println("[VON-Network]")
+	fmt.Println("[Ledger]")
 	err = ledger.RenameNetworks(workdir, networkName)
 	fmt.Printf("Renamed networks: %v in %v/von-network/docker-compose.yml\n", networkName, workdir)
 
@@ -127,17 +137,19 @@ func buildAgent() error {
 		return err
 	}
 
-	fmt.Println("Waiting for boot ledger...")
+	//fmt.Println("Waiting for boot ledger...")
+	printWithNewLine("Wait 30 seconds for the ledger to start.")
 	time.Sleep(time.Second * 30)
 
 	//register public DID to ledger
-	fmt.Println("Registering to ledger...")
+	//fmt.Println("Registering to ledger...")
 	agentNameList := analyse.GetAgentNameList(dotFilepath)
 
 	agentNameAndSeed, err := commander.RegisterDID(agentNameList)
 	//fmt.Println(agentSeedList)
 
-	fmt.Println("[Agent]")
+	//fmt.Println("[Agent]")
+	printWithNewLine("[Agent]")
 	//testtesttest := commander.IsExistDir(filepath.Join(workdir,"aries-cloudagent-python"))
 	//fmt.Println(testtesttest)
 	if commander.IsExistDir(filepath.Join(workdir, "aries-cloudagent-python")) == false {
@@ -146,11 +158,11 @@ func buildAgent() error {
 			return err
 		}
 	}
-	fmt.Println("Converting...")
 	err = agent.ConvertFromGraph(dotFilepath, workdir, networkName, "192.168.3.15", agentNameAndSeed) //TODO get IP from command
 	if err != nil {
 		return err
 	}
+	printWithNewLine("Rewrote docker-compose.yml")
 
 	fmt.Println("Up Agent...")
 	err = commander.DockerComposeUpAtWorkdir(workdir)
@@ -160,4 +172,17 @@ func buildAgent() error {
 
 	fmt.Println("done!")
 	return nil
+}
+
+func printWithNewLine(comment string) {
+	fmt.Printf("\n%v\n", comment)
+}
+
+func printProgressWithDot(comment string, times int) {
+	fmt.Printf("\n%v", comment)
+	for i := 0; i < times; i++ {
+		fmt.Printf(".")
+		time.Sleep(time.Second * 1)
+	}
+	fmt.Println()
 }
