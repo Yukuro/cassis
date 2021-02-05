@@ -4,6 +4,7 @@ import (
 	"errors"
 	"github.com/creack/pty"
 	"io"
+	"io/ioutil"
 	"net"
 	"os"
 	"os/exec"
@@ -64,6 +65,21 @@ func IsExistDir(path string) bool {
 		return true
 	}
 	return false
+}
+
+// TODO ひとつにまとめる validateIsDotfile
+func IsExistDotInDir(path string)(bool, error){
+	files, err := ioutil.ReadDir(path)
+	if err != nil{
+		return false, err
+	}
+
+	for _, files := range files{
+		if filepath.Ext(files.Name()) == ".dot"{
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
 func RemoveAllFilesAtWorkDir(workdir string) error {

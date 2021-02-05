@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"cli/common"
+	"cli/src/commander"
 	"fmt"
 	"github.com/spf13/cobra"
 )
@@ -43,12 +44,19 @@ func init() {
 func doAsIssuer() error {
 	menuList := []string{
 		"build Agent",
-		"register schema",
-		"register credential definition",
+		"schema",
+		"credential definition",
 	}
 
 	//DOT言語が同ディレクトリに存在するか？
-
+	//auto modeでない限り、そんなに意味ないような...ファイル内容の同期が難しそう
+	isExistDotInCurrentDir, err := commander.IsExistDotInDir(".")
+	if err != nil{
+		return err
+	}
+	if isExistDotInCurrentDir {
+		fmt.Println("Dot file exists")
+	}
 
 	selectedMenu, err := common.PromptSelect("Select", menuList)
 	if err != nil{
@@ -58,9 +66,46 @@ func doAsIssuer() error {
 	case menuList[0]: // "build Agent"
 		fmt.Println("build Agent...")
 	case menuList[1]: // "register schema"
-		fmt.Println("register schema...")
+		fmt.Println("originate schema...")
+		schemaMenuList := []string{
+			"configure schema",
+			"originate schema",
+		}
+		selectedSchemaMenu, err := common.PromptSelect("Select", schemaMenuList)
+		if err != nil{
+			return err
+		}
+		switch selectedSchemaMenu {
+		case schemaMenuList[0]: // "configure schema"
+			fmt.Println("set attribute")
+			schemaName, err := common.PromptString("Set schema name")
+			if err != nil{
+				return err
+			}
+			var schemaAttribute []string
+			fmt.Println("Type \"end\" to exit.")
+			for {
+				attr, err := common.PromptString("Set attribute")
+				if err != nil{
+					return err
+				}
+
+				if attr == "end" {
+					break
+				}
+
+				schemaAttribute = append(schemaAttribute, attr)
+			}
+
+			// schemaNameとschemaAttributeをconfig.ymlに書き込む
+			fmt.Printf("%v %v\n", schemaName, schemaAttribute)
+
+			// originateするか聞く
+		case schemaMenuList[1]: // "originate schema"
+			fmt.Println("originate schema")
+		}
 	case menuList[2]: // "register credential definition"
-		fmt.Println("register credential definition")
+		fmt.Println("originate credential definition")
 	}
 	return nil
 }

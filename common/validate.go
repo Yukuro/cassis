@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 )
 
+// TODO  ひとつにまとめる IsExistDot
 func validateIsDotfile(input string) error {
 	_, err := os.Stat(input)
 	if os.IsNotExist(err) {
