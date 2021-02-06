@@ -1,16 +1,16 @@
 package test
 
 import (
-	"cli/src/analyse/agent"
-	"cli/src/analyse/ledger"
+	"cli/src/agent-docker-compose"
 	"cli/src/commander"
+	"cli/src/ledger-docker-compose"
 	"fmt"
 	"path/filepath"
 	"testing"
 )
 
 func TestRenameNetworks(t *testing.T) {
-	ledger.RenameNetworks("/home/tuple/GolandProjects/cli/test/", "shared-network01")
+	ledger_docker_compose.RenameNetworks("/home/tuple/GolandProjects/cli/test/", "shared-network01")
 }
 
 func TestGenerateDockerCompose(t *testing.T) {
@@ -36,7 +36,7 @@ func TestGenerateDockerCompose(t *testing.T) {
 
 func TestGetServiceName(t *testing.T) {
 	workdir := "/home/tuple/GolandProjects/cli/sandbox/"
-	_, err := agent.GetServiceNameFromWorkdir(workdir)
+	_, err := agent_docker_compose.GetServiceNameFromWorkdir(workdir)
 	if err != nil {
 		panic(err)
 	}

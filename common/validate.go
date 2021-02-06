@@ -42,10 +42,11 @@ func validateExistFileAndDirectory(input string) error {
 }
 
 func validateYesOrNo(input string) error {
-	if input != "y" || input != "N" {
-		return errors.New("enter y or N")
+	//fmt.Printf("%v\n", input)
+	if input == "Y" || input == "y" || input == "N" || input == "n" {
+		return nil
 	}
-	return nil
+	return errors.New("enter Y|y or N|n")
 }
 
 //TODO

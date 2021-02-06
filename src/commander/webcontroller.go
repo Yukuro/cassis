@@ -2,6 +2,7 @@ package commander
 
 import (
 	"bytes"
+	"cli/src/issuer"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -97,7 +98,7 @@ func ComLedger(alias string, seed string) (string, error) {
 func InvitationToHolder(targetUrl string, agentName string) (string, string, error) {
 	targetUrl = targetUrl + "/connections/create-invitation"
 
-	alias := fmt.Sprintf("%v_%v", agentName, getRandomString(5))
+	alias := fmt.Sprintf("%v_%v", agentName, GetRandomString(5))
 
 	jsonData := `{"alias":"` + alias + `","auto_accept":true}`
 
@@ -139,15 +140,54 @@ func InvitationToHolder(targetUrl string, agentName string) (string, string, err
 	return connectionId, string(bytes), nil
 }
 
+func OriginateSchema(issuerUrl string, schemaName string, schemaVersion string, schemaAttr []string) (string, string, []string, string, error) {
+	jsonData, err := issuer.PackSchema(schemaName, schemaVersion, schemaAttr)
+	if err != nil {
+		return "", "", []string{}, "", err
+	}
+
+	req, err := http.NewRequest(
+		"POST",
+		issuerUrl,
+		bytes.NewBuffer([]byte(jsonData)),
+	)
+	if err != nil {
+		return "", "", []string{}, "", err
+	}
+
+	//fmt.Printf("POST\n%v\n", string(jsonData))
+
+	req.Header.Set("accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", "", []string{}, "", err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", "", []string{}, "", err
+	}
+	originatedSchemaName, originatedSchemaId, err := issuer.ExtractSchemaNameAndSchemaId(body)
+	if err != nil {
+		return "", "", []string{}, "", err
+	}
+
+	return originatedSchemaName, schemaVersion, schemaAttr, originatedSchemaId, nil
+}
+
 func getSeedList(agentNameList []string) (map[string]string, error) {
 	seedList := map[string]string{}
 	for _, name := range agentNameList {
-		seedList[name] = getRandomString(32)
+		seedList[name] = GetRandomString(32)
 	}
 	return seedList, nil
 }
 
-func getRandomString(n int) string {
+func GetRandomString(n int) string {
 	b := make([]rune, n)
 	for i := range b {
 		b[i] = letterRunes[rand.Intn(len(letterRunes))]

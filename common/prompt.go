@@ -80,6 +80,22 @@ func PromptNetworkName(name string) (string, error) {
 	return prompt.Run()
 }
 
+func PromptYesOrNo(name string) (bool, error) {
+	prompt := promptui.Prompt{
+		Label:    name,
+		Validate: validateYesOrNo,
+	}
+	res, err := prompt.Run()
+	if err != nil {
+		return false, err
+	}
+
+	if res == "Y" || res == "y" {
+		return true, nil
+	}
+	return false, nil
+}
+
 func runAndConvAbs(p promptui.Prompt) (string, error) {
 	path, err := p.Run()
 	if err != nil {

@@ -17,14 +17,14 @@ package cmd
 
 import (
 	"cli/common"
-	"fmt"
-
+	"cli/src/agent-build"
+	"cli/src/commander"
 	"github.com/spf13/cobra"
 )
 
-// ledgerCmd represents the ledger command
-var ledgerCmd = &cobra.Command{
-	Use:   "ledger",
+// allCmd represents the all command
+var allCmd = &cobra.Command{
+	Use:   "all",
 	Short: "A brief description of your command",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
@@ -33,38 +33,33 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		return doAsLedger()
+		return doAsAll()
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(ledgerCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// ledgerCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// ledgerCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.AddCommand(allCmd)
 }
 
-func doAsLedger() error {
+func doAsAll() error {
 	menuList := []string{
-		"build Ledger",
+		"build Agent",
+		"remove Agent",
 	}
-
-	//DOT言語が同ディレクトリに存在するか？
 
 	selectedMenu, err := common.PromptSelect("Select", menuList)
 	if err != nil {
 		return err
 	}
 	switch selectedMenu {
-	case menuList[0]: // "build Agent"
-		fmt.Println("build Ledger...")
+	case menuList[0]: // "build Agent
+		if err := agent_build.BuildAgent(); err != nil {
+			return err
+		}
+	case menuList[1]: // "remove Agent"
+		if err := commander.RemoveSystem(); err != nil {
+			return err
+		}
 	}
 	return nil
 }

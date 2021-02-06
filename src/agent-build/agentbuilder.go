@@ -1,37 +1,17 @@
-package cmd
+package agent_build
 
 import (
 	"cli/common"
+	"cli/src/agent-docker-compose"
 	"cli/src/analyse"
-	"cli/src/analyse/agent"
-	"cli/src/analyse/ledger"
 	"cli/src/commander"
+	"cli/src/ledger-docker-compose"
 	"fmt"
-	"github.com/spf13/cobra"
 	"path/filepath"
 	"time"
 )
 
-// autoBuildCmd represents the build command
-var autoBuildCmd = &cobra.Command{
-	Use:   "auto",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return buildAgent()
-	},
-}
-
-func init() {
-	rootCmd.AddCommand(autoBuildCmd)
-}
-
-func buildAgent() error {
+func BuildAgent() error {
 	workdir, err := common.PromptForFileAndDirectory("Enter your workdir")
 	if err != nil {
 		return err
@@ -60,10 +40,10 @@ func buildAgent() error {
 		printWithNewLine("detected Issuer - Holder relation..")
 
 		//csvFilepath, err := common.PromptForCsv("Enter your CSV file dir")
-		_, err := common.PromptForCsv("Enter your CSV file dir") //TODO CSVの処理書く
-		if err != nil {
-			return err
-		}
+		//_, err := common.PromptForCsv("Enter your CSV file dir") //TODO CSVの処理書く
+		//if err != nil {
+		//	return err
+		//}
 		//fmt.Printf("Your csv file is %v\n", csvFilepath)
 	}
 
@@ -83,10 +63,13 @@ func buildAgent() error {
 	//start docker-network
 	//fmt.Println("Building docker network...")
 	//fmt.Println("Enter network name")
-	networkName, err := common.PromptString("Enter the docker network name")
-	if err != nil {
-		return err
-	}
+	//networkName, err := common.PromptString("Enter the docker network name")
+	//if err != nil {
+	//	return err
+	//}
+
+	//TODO dockerNetworkを使って通信する
+	networkName := fmt.Sprintf("shred-%v", commander.GetRandomString(16))
 
 	networkHash, err := commander.BuildDockerNetwork(networkName)
 	if err != nil {
@@ -96,7 +79,7 @@ func buildAgent() error {
 
 	//Start VON-NW
 	fmt.Println("[Ledger]")
-	err = ledger.RenameNetworks(workdir, networkName)
+	err = ledger_docker_compose.RenameNetworks(workdir, networkName)
 	fmt.Printf("Renamed networks: %v in %v/von-network/docker-compose.yml\n", networkName, workdir)
 
 	fmt.Println("build and start network")
@@ -130,7 +113,7 @@ func buildAgent() error {
 			return err
 		}
 	}
-	err = agent.ConvertFromGraph(dotFilepath, workdir, networkName, "192.168.3.15", agentNameAndSeed) //TODO get IP from command
+	err = agent_docker_compose.ConvertFromGraph(dotFilepath, workdir, networkName, "192.168.3.15", agentNameAndSeed) //TODO get IP from command
 	if err != nil {
 		return err
 	}

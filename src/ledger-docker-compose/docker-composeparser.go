@@ -1,4 +1,4 @@
-package ledger
+package ledger_docker_compose
 
 import (
 	"errors"
@@ -101,26 +101,26 @@ type Volumes struct {
 func RenameNetworks(workdir string, networkName string) error {
 	yamlPath := filepath.Join(workdir, "von-network", "docker-compose.yml")
 	bytes, err := ioutil.ReadFile(yamlPath)
-	if err != nil{
+	if err != nil {
 		return errors.New("can't open yaml file")
 	}
 
 	d := DockerCompose{}
 	err = yaml.Unmarshal(bytes, &d)
-	if err != nil{
+	if err != nil {
 		return errors.New("can't parse yml file")
 	}
 
 	d.Networks.Default.External.Name = networkName
 
 	out, err := yaml.Marshal(&d)
-	if err != nil{
+	if err != nil {
 		errors.New("can't serialize data")
 	}
 
 	dstPath := filepath.Join(workdir, "von-network", "docker-compose.yml")
 	err = ioutil.WriteFile(dstPath, out, 0644)
-	if err != nil{
+	if err != nil {
 		errors.New("can't write to yml file")
 	}
 	//fmt.Println(out)

@@ -1,4 +1,4 @@
-package agent
+package agent_docker_compose
 
 import (
 	"errors"

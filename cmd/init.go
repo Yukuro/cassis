@@ -16,6 +16,7 @@ limitations under the License.
 package cmd
 
 import (
+	"cli/src/agent"
 	"cli/src/commander"
 	"fmt"
 	"github.com/spf13/cobra"
@@ -48,23 +49,21 @@ func initEnv() error {
 		return nil
 	}
 
-	if err := mkdirInitDir(); err != nil{
+	//defaultUmask := syscall.Umask(0)
+	if err := mkdirInitDir(); err != nil {
+		return err
+	}
+	//syscall.Umask(defaultUmask)
+
+	if err := agent.CreateNilConf(".cassis"); err != nil {
 		return err
 	}
 	return nil
 }
 
 func mkdirInitDir() error {
-	if err := os.MkdirAll(".cassis/issuer", 0666); err != nil{
-		return err
-	}
-	if err := os.MkdirAll(".cassis/holder", 0666); err != nil{
-		return err
-	}
-	if err := os.MkdirAll(".cassis/ledger", 0666); err != nil{
-		return err
-	}
-	if err := os.MkdirAll(".cassis/verifier", 0666); err != nil{
+	// TODO しかるべき権限に設定する
+	if err := os.Mkdir(".cassis", 0777); err != nil {
 		return err
 	}
 	return nil
