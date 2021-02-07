@@ -11,10 +11,11 @@ type Conf struct {
 	Ledger interface{} `yaml:"ledger"`
 }
 type Schema struct {
-	Name    string   `yaml:"name"`
-	Version string   `yaml:"version"`
-	Attr    []string `yaml:"attr"`
-	ID      string   `yaml:"id,omitempty"`
+	Name       string   `yaml:"name"`
+	Version    string   `yaml:"version"`
+	Attr       []string `yaml:"attr"`
+	ID         string   `yaml:"id,omitempty"`
+	Cred_defId string   `yaml:"cred_defid,omitempty"`
 }
 type Issuer struct {
 	Schema []Schema `yaml:"schema"`
@@ -46,16 +47,17 @@ func CreateNilConf(dstPath string) error {
 	return nil
 }
 
-func CreateIssuerConf(dstPath string, issuerName string, issuerVersion string, issuerAttribute []string, schemaId string) error {
+func CreateIssuerConf(dstPath string, schemaName string, schemaVersion string, schemaAttributes []string, schemaId string, cred_defId string) error {
 	cf := Conf{}
 	is := Issuer{}
 	//is.Agent = []string{}
 
 	sc := Schema{
-		Name:    issuerName,
-		Version: issuerVersion,
-		Attr:    issuerAttribute,
-		ID:      schemaId,
+		Name:       schemaName,
+		Version:    schemaVersion,
+		Attr:       schemaAttributes,
+		ID:         schemaId,
+		Cred_defId: cred_defId,
 	}
 	is.Schema = append(is.Schema, sc)
 	cf.Issuer = is
@@ -74,7 +76,39 @@ func CreateIssuerConf(dstPath string, issuerName string, issuerVersion string, i
 	return nil
 }
 
-func AnalyzeIssuerConf(initDir string) (map[string][]string, error) {
+func AddIssuerConfWithWorkdir(dstPath string, schemaName string, schemaVersion string, schemaAttributes []string, schemaId string, cred_defId string) error {
+	ymlPath := filepath.Join(".cassis", "config.yml")
+	bytes, err := ioutil.ReadFile(ymlPath)
+	if err != nil {
+		return err
+	}
+
+	cf := Conf{}
+	err = yaml.Unmarshal(bytes, &cf)
+	if err != nil {
+		return err
+	}
+
+	//TODO 全属性に対応させる
+	if cred_defId != "" {
+		cf.Issuer.Schema[0].Cred_defId = cred_defId
+	}
+
+	out, err := yaml.Marshal(&cf)
+	if err != nil {
+		return err
+	}
+
+	dstPath = filepath.Join(dstPath, "config.yml")
+	err = ioutil.WriteFile(dstPath, out, 0666)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func AnalyzeIssuerConf(initDir string) ([]map[string]string, error) {
 	ymlPath := filepath.Join(initDir, "config.yml")
 	bytes, err := ioutil.ReadFile(ymlPath)
 	if err != nil {
@@ -87,10 +121,14 @@ func AnalyzeIssuerConf(initDir string) (map[string][]string, error) {
 		return nil, err
 	}
 
-	res := make(map[string][]string)
+	var res []map[string]string
 	for _, sc := range cf.Issuer.Schema {
 		// TODO Version 1.0固定をやめる
-		res[sc.Name] = sc.Attr
+		tp := map[string]string{}
+		tp["name"] = sc.Name
+		tp["version"] = sc.Version
+		tp["id"] = sc.ID
+		res = append(res, tp)
 	}
 
 	return res, nil

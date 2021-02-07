@@ -121,7 +121,12 @@ func doAsIssuer() error {
 			}
 
 			// 一旦Attributeをymlに保存
-			err = agent.CreateIssuerConf(".cassis", schemaName, "1.0", schemaAttribute, "")
+			//sc := map[string]string{
+			//	"name": schemaName,
+			//	"version": "1.0",
+			//	"attr": schemaAttribute,
+			//}
+			err = agent.CreateIssuerConf(".cassis", schemaName, "1.0", schemaAttribute, "", "")
 			if err != nil {
 				return err
 			}
@@ -141,7 +146,7 @@ func doAsIssuer() error {
 				return err
 			}
 
-			err = agent.CreateIssuerConf(".cassis", originatedSchemaName, originatedSchemaVersion, originatedSchemaAttr, originatedSchemaId)
+			err = agent.CreateIssuerConf(".cassis", originatedSchemaName, originatedSchemaVersion, originatedSchemaAttr, originatedSchemaId, "")
 			if err != nil {
 				return err
 			}
@@ -172,6 +177,44 @@ func doAsIssuer() error {
 		}
 	case menuList[2]: // "register credential definition"
 		fmt.Println("originate credential definition")
+		conf, err := agent.AnalyzeIssuerConf(".cassis")
+		if err != nil {
+			return err
+		}
+
+		var cred_defMenuList []string
+		for _, sc := range conf {
+			menu := fmt.Sprintf("%v(%v) %v", sc["name"], sc["version"], sc["id"])
+			cred_defMenuList = append(cred_defMenuList, menu)
+		}
+
+		selected, err := common.PromptSelect("Select", cred_defMenuList)
+		if err != nil {
+			return nil
+		}
+
+		var selectedIndex int
+		for i, mn := range cred_defMenuList {
+			if mn == selected {
+				selectedIndex = i
+				break
+			}
+		}
+
+		sc := conf[selectedIndex]
+		//fmt.Printf("%v %v %v\n", sc["name"], sc["version"], sc["id"])
+
+		originatedCred_defId, err := commander.OriginateCred_def(targetUrl+"/credential-definitions", sc["id"])
+		if err != nil {
+			return err
+		}
+
+		err = agent.AddIssuerConfWithWorkdir(".cassis", "", "", []string{}, "", originatedCred_defId)
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("credential definition ( %v ) --> ledger done!", originatedCred_defId)
 	}
 	return nil
 }

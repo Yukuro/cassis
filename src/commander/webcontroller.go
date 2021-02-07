@@ -179,6 +179,46 @@ func OriginateSchema(issuerUrl string, schemaName string, schemaVersion string, 
 	return originatedSchemaName, schemaVersion, schemaAttr, originatedSchemaId, nil
 }
 
+func OriginateCred_def(issuerUrl string, schemaId string) (string, error) {
+	jsonData, err := issuer.PackCred_def(schemaId)
+	if err != nil {
+		return "", err
+	}
+
+	req, err := http.NewRequest(
+		"POST",
+		issuerUrl,
+		bytes.NewBuffer([]byte(jsonData)),
+	)
+	if err != nil {
+		return "", err
+	}
+
+	//fmt.Printf("POST\n%v\n", string(jsonData))
+
+	req.Header.Set("accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", nil
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	cred_defId, err := issuer.AnalyzeCred_def(body)
+	if err != nil {
+		return "", err
+	}
+
+	return cred_defId, nil
+}
+
 func getSeedList(agentNameList []string) (map[string]string, error) {
 	seedList := map[string]string{}
 	for _, name := range agentNameList {
