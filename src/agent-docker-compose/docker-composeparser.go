@@ -98,7 +98,8 @@ func ConvertFromGraph(dotPath string, workdir string, networkName string, myIPAd
 			issuerNum += 1
 			//fmt.Printf("%v is Issuer\n", node.Name)
 
-			//TODO interfaceとか使って書く
+			// ~~TODO interfaceとか使って書く~~
+			// TODO yamlのunmarshalする構造体を配列を使って書いて、頭の悪さを払拭する
 			switch issuerNum {
 			case 1:
 				d.Services.Issuer1.Build.Context = "./aries-cloudagent-python"
@@ -122,6 +123,26 @@ func ConvertFromGraph(dotPath string, workdir string, networkName string, myIPAd
 
 		case "Holder":
 			holderNum += 1
+			switch holderNum {
+			case 1:
+				d.Services.Holder1.Build.Context = "./aries-cloudagent-python"
+				d.Services.Holder1.Build.Dockerfile = "./docker/Dockerfile.run"
+				d.Services.Holder1.Ports = []string{"8000-8999:8000", "11000-11999:11000"}
+				d.Services.Holder1.Command = getAgentCommand(node.Name, myIPAddress, seed)
+				d.Services.Holder1.Volumes = []string{"./aries-cloudagent-python/logs/:/home/indy/logs"}
+			case 2:
+				d.Services.Holder2.Build.Context = "./aries-cloudagent-python"
+				d.Services.Holder2.Build.Dockerfile = "./docker/Dockerfile.run"
+				d.Services.Holder2.Ports = []string{"8000-8999:8000", "11000-11999:11000"}
+				d.Services.Holder2.Command = getAgentCommand(node.Name, myIPAddress, seed)
+				d.Services.Holder2.Volumes = []string{"./aries-cloudagent-python/logs/:/home/indy/logs"}
+			case 3:
+				d.Services.Holder3.Build.Context = "./aries-cloudagent-python"
+				d.Services.Holder3.Build.Dockerfile = "./docker/Dockerfile.run"
+				d.Services.Holder3.Ports = []string{"8000-8999:8000", "11000-11999:11000"}
+				d.Services.Holder3.Command = getAgentCommand(node.Name, myIPAddress, seed)
+				d.Services.Holder3.Volumes = []string{"./aries-cloudagent-python/logs/:/home/indy/logs"}
+			}
 			//fmt.Printf("%v is Holder\n", node.Name)
 
 		case "Verifier":

@@ -20,7 +20,9 @@ import (
 	"cli/src/agent"
 	"cli/src/commander"
 	"fmt"
+	"github.com/mdp/qrterminal/v3"
 	"github.com/spf13/cobra"
+	"os"
 	"path/filepath"
 )
 
@@ -46,6 +48,7 @@ func init() {
 func doAsIssuer() error {
 	menuList := []string{
 		"build Agent",
+		"invite holder",
 		"schema",
 		"credential definition",
 	}
@@ -88,7 +91,20 @@ func doAsIssuer() error {
 	switch selectedMenu {
 	case menuList[0]: // "build Agent"
 		fmt.Println("build Agent...")
-	case menuList[1]: // "register schema"
+	case menuList[1]: // "invite Holder"
+		fmt.Println("invite Holder...")
+		connectionId, invitation, err := commander.InvitationToHolder(targetUrl, selectedAgent)
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("\nConnection ID: %v\n", connectionId)
+		fmt.Println("Scan the following qr code with your app")
+		//fmt.Println(invitation)
+
+		fmt.Printf("\n%v\n", invitation)
+		qrterminal.GenerateHalfBlock(invitation, qrterminal.L, os.Stdout)
+	case menuList[2]: // "register schema"
 		fmt.Println("originate schema...")
 		schemaMenuList := []string{
 			"configure schema",
@@ -175,7 +191,7 @@ func doAsIssuer() error {
 			//選択したschemaのパーサー書く
 			//選択したschemaでoriginate
 		}
-	case menuList[2]: // "register credential definition"
+	case menuList[3]: // "register credential definition"
 		fmt.Println("originate credential definition")
 		conf, err := agent.AnalyzeIssuerConf(".cassis")
 		if err != nil {

@@ -16,11 +16,11 @@ limitations under the License.
 package commander
 
 import (
-	"cli/common"
+	"path/filepath"
 )
 
 func RemoveSystem() error {
-	workdir, err := common.PromptForFileAndDirectory("Enter target workdir")
+	workdir, err := filepath.Abs(".")
 	if err != nil {
 		return err
 	}

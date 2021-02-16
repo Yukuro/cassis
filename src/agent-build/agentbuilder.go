@@ -12,16 +12,32 @@ import (
 )
 
 func BuildAgent() error {
-	workdir, err := common.PromptForFileAndDirectory("Enter your workdir")
+	//workdir, err := common.PromptForFileAndDirectory("Enter your workdir")
+	//if err != nil {
+	//	return err
+	//}
+
+	workdir, err := filepath.Abs(".")
 	if err != nil {
 		return err
 	}
 
 	//get .dot file
 	//fmt.Println("Enter your dot file...")
-	dotFilepath, err := common.PromptForDot("Enter your DOT file dir")
+	isExistInCurrentDir, err := commander.IsExistDotInDir(workdir)
 	if err != nil {
 		return err
+	}
+
+	var dotFilepath string
+	if !isExistInCurrentDir {
+		dotFilepath, err = common.PromptForDot("Enter your DOT file dir")
+		if err != nil {
+			return err
+		}
+	} else {
+		fmt.Printf("\nDOT lang file detected.\n")
+		dotFilepath = filepath.Join(workdir, "test.dot") //TODO よしなに変える
 	}
 
 	printProgressWithDot("Analysing", 3)
