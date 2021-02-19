@@ -140,6 +140,37 @@ func InvitationToHolder(targetUrl string, agentName string) (string, string, err
 	return connectionId, string(bytes), nil
 }
 
+func ReceiveInvitation(targetUrl string, invitation string) error {
+	targetUrl = targetUrl + "/connections/receive-invitation"
+
+	jsonData := []byte(invitation)
+
+	req, err := http.NewRequest(
+		"POST",
+		targetUrl,
+		bytes.NewBuffer(jsonData),
+	)
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	_, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func OriginateSchema(issuerUrl string, schemaName string, schemaVersion string, schemaAttr []string) (string, string, []string, string, error) {
 	jsonData, err := issuer.PackSchema(schemaName, schemaVersion, schemaAttr)
 	if err != nil {

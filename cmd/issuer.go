@@ -71,7 +71,7 @@ func doAsIssuer() error {
 	//Issuer選択
 	//network inviteから流用
 	//将来的には.cassis/config.ymlから読む
-	adminPort, err := commander.GetAdminPortFromWorkdir(currentAbsPath)
+	adminPort, err := commander.GetAdminPortFromWorkdir("issuer", currentAbsPath)
 	if err != nil {
 		return err
 	}
