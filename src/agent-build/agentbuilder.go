@@ -6,6 +6,7 @@ import (
 	"cli/src/analyse"
 	"cli/src/commander"
 	"cli/src/ledger-docker-compose"
+	ngrok_analyze "cli/src/ngrok-analyze"
 	"fmt"
 	"path/filepath"
 	"time"
@@ -129,7 +130,23 @@ func BuildAgent() error {
 			return err
 		}
 	}
-	err = agent_docker_compose.ConvertFromGraph(dotFilepath, workdir, networkName, "192.168.3.15", agentNameAndSeed) //TODO get IP from command
+
+	//ngrokで8001(for Issuer1) / 8002(for Issuer2) / 8004(for Holder1) / 8005(for Holder2)ポートを開放する
+	// TODO SSHポートフォワーディング等でいい感じに実装する
+	err = commander.ExposeNgrok8001To8006(workdir)
+	if err != nil {
+		return err
+	}
+	fmt.Println("Waiting for boot ngrok client...")
+	time.Sleep(time.Second * 5)
+	ngrokUrlList, err := ngrok_analyze.GetNgrokUrl()
+	if err != nil {
+		return err
+	}
+
+	// TODO IPアドレスを動的に取得する
+	// TODO Ledgerのlocalhost指定で行けるかどうか試す
+	err = agent_docker_compose.ConvertFromGraph(dotFilepath, workdir, networkName, "192.168.3.15", agentNameAndSeed, ngrokUrlList)
 	if err != nil {
 		return err
 	}

@@ -69,7 +69,7 @@ type Verifier struct {
 }
 
 // dot -> graph -> docker-compose.yml
-func ConvertFromGraph(dotPath string, workdir string, networkName string, myIPAddress string, agentNameAndSeed map[string]string) error {
+func ConvertFromGraph(dotPath string, workdir string, networkName string, myIPAddress string, agentNameAndSeed map[string]string, ngrokUrlList map[string]string) error {
 	bytes, err := ioutil.ReadFile(dotPath)
 	if err != nil {
 		return errors.New("can't read dot file")
@@ -104,21 +104,21 @@ func ConvertFromGraph(dotPath string, workdir string, networkName string, myIPAd
 			case 1:
 				d.Services.Issuer1.Build.Context = "./aries-cloudagent-python"
 				d.Services.Issuer1.Build.Dockerfile = "./docker/Dockerfile.run"
-				d.Services.Issuer1.Ports = []string{"8000-8999:8000", "11000-11999:11000"}
-				d.Services.Issuer1.Command = getAgentCommand(node.Name, myIPAddress, seed)
+				d.Services.Issuer1.Ports = []string{"8001:8000", "11000-11999:11000"}
+				d.Services.Issuer1.Command = getAgentCommand(node.Name, myIPAddress, seed, ngrokUrlList["issuer1"])
 				d.Services.Issuer1.Volumes = []string{"./aries-cloudagent-python/logs/:/home/indy/logs"}
 			case 2:
 				d.Services.Issuer2.Build.Context = "./aries-cloudagent-python"
 				d.Services.Issuer2.Build.Dockerfile = "./docker/Dockerfile.run"
-				d.Services.Issuer2.Ports = []string{"8000-8999:8000", "11000-11999:11000"}
-				d.Services.Issuer2.Command = getAgentCommand(node.Name, myIPAddress, seed)
+				d.Services.Issuer2.Ports = []string{"8002:8000", "11000-11999:11000"}
+				d.Services.Issuer2.Command = getAgentCommand(node.Name, myIPAddress, seed, ngrokUrlList["issuer2"])
 				d.Services.Issuer2.Volumes = []string{"./aries-cloudagent-python/logs/:/home/indy/logs"}
-			case 3:
-				d.Services.Issuer3.Build.Context = "./aries-cloudagent-python"
-				d.Services.Issuer3.Build.Dockerfile = "./docker/Dockerfile.run"
-				d.Services.Issuer3.Ports = []string{"8000-8999:8000", "11000-11999:11000"}
-				d.Services.Issuer3.Command = getAgentCommand(node.Name, myIPAddress, seed)
-				d.Services.Issuer3.Volumes = []string{"./aries-cloudagent-python/logs/:/home/indy/logs"}
+				//case 3:
+				//	d.Services.Issuer3.Build.Context = "./aries-cloudagent-python"
+				//	d.Services.Issuer3.Build.Dockerfile = "./docker/Dockerfile.run"
+				//	d.Services.Issuer3.Ports = []string{"8003:8000", "11000-11999:11000"}
+				//	d.Services.Issuer3.Command = getAgentCommand(node.Name, myIPAddress, seed)
+				//	d.Services.Issuer3.Volumes = []string{"./aries-cloudagent-python/logs/:/home/indy/logs"}
 			}
 
 		case "Holder":
@@ -127,21 +127,21 @@ func ConvertFromGraph(dotPath string, workdir string, networkName string, myIPAd
 			case 1:
 				d.Services.Holder1.Build.Context = "./aries-cloudagent-python"
 				d.Services.Holder1.Build.Dockerfile = "./docker/Dockerfile.run"
-				d.Services.Holder1.Ports = []string{"8000-8999:8000", "11000-11999:11000"}
-				d.Services.Holder1.Command = getAgentCommand(node.Name, myIPAddress, seed)
+				d.Services.Holder1.Ports = []string{"8004:8000", "11000-11999:11000"}
+				d.Services.Holder1.Command = getAgentCommand(node.Name, myIPAddress, seed, ngrokUrlList["holder1"])
 				d.Services.Holder1.Volumes = []string{"./aries-cloudagent-python/logs/:/home/indy/logs"}
 			case 2:
 				d.Services.Holder2.Build.Context = "./aries-cloudagent-python"
 				d.Services.Holder2.Build.Dockerfile = "./docker/Dockerfile.run"
-				d.Services.Holder2.Ports = []string{"8000-8999:8000", "11000-11999:11000"}
-				d.Services.Holder2.Command = getAgentCommand(node.Name, myIPAddress, seed)
+				d.Services.Holder2.Ports = []string{"8005:8000", "11000-11999:11000"}
+				d.Services.Holder2.Command = getAgentCommand(node.Name, myIPAddress, seed, ngrokUrlList["holder2"])
 				d.Services.Holder2.Volumes = []string{"./aries-cloudagent-python/logs/:/home/indy/logs"}
-			case 3:
-				d.Services.Holder3.Build.Context = "./aries-cloudagent-python"
-				d.Services.Holder3.Build.Dockerfile = "./docker/Dockerfile.run"
-				d.Services.Holder3.Ports = []string{"8000-8999:8000", "11000-11999:11000"}
-				d.Services.Holder3.Command = getAgentCommand(node.Name, myIPAddress, seed)
-				d.Services.Holder3.Volumes = []string{"./aries-cloudagent-python/logs/:/home/indy/logs"}
+				//case 3:
+				//	d.Services.Holder3.Build.Context = "./aries-cloudagent-python"
+				//	d.Services.Holder3.Build.Dockerfile = "./docker/Dockerfile.run"
+				//	d.Services.Holder3.Ports = []string{"8006:8000", "11000-11999:11000"}
+				//	d.Services.Holder3.Command = getAgentCommand(node.Name, myIPAddress, seed)
+				//	d.Services.Holder3.Volumes = []string{"./aries-cloudagent-python/logs/:/home/indy/logs"}
 			}
 			//fmt.Printf("%v is Holder\n", node.Name)
 
@@ -185,9 +185,9 @@ func attrToBetter(label string, xlabel string) (string, map[string]string) {
 	return label, attrs
 }
 
-func getAgentCommand(label string, ip string, seed string) string {
+func getAgentCommand(label string, ip string, seed string, ngrokUrl string) string {
 	cmd := fmt.Sprintf(
-		"start --label %v --inbound-transport http 0.0.0.0 8000 --outbound-transport http --admin 0.0.0.0 11000 --admin-insecure-mode --genesis-url http://%v:9000/genesis --seed %v --wallet-type indy --wallet-name %v --wallet-key welldone --endpoint http://%v:8000/ --public-invites --auto-accept-invites --auto-accept-requests --auto-ping-connection --debug-connections", label, ip, seed, label, ip)
+		"start --label %v --inbound-transport http 0.0.0.0 8000 --outbound-transport http --admin 0.0.0.0 11000 --admin-insecure-mode --genesis-url http://%v:9000/genesis --seed %v --wallet-type indy --wallet-name %v --wallet-key welldone --endpoint %v --public-invites --auto-accept-invites --auto-accept-requests --auto-ping-connection --debug-connections", label, ip, seed, label, ngrokUrl)
 	return cmd
 }
 

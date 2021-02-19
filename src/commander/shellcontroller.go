@@ -68,14 +68,14 @@ func IsExistDir(path string) bool {
 }
 
 // TODO ひとつにまとめる validateIsDotfile
-func IsExistDotInDir(path string)(bool, error){
+func IsExistDotInDir(path string) (bool, error) {
 	files, err := ioutil.ReadDir(path)
-	if err != nil{
+	if err != nil {
 		return false, err
 	}
 
-	for _, files := range files{
-		if filepath.Ext(files.Name()) == ".dot"{
+	for _, files := range files {
+		if filepath.Ext(files.Name()) == ".dot" {
 			return true, nil
 		}
 	}
@@ -104,4 +104,25 @@ func MapKeyToSlice(source map[string]string) []string {
 		result = append(result, key)
 	}
 	return result
+}
+
+// ngrok
+func ExposeNgrok8001To8006(workdir string) error {
+	parameter := []string{
+		"ngrok",
+		"start",
+		"-config",
+		"/home/tuple/GolandProjects/cli/config-ngrok.yml",
+		"issuer1",
+		"issuer2",
+		"holder1",
+		"holder2",
+	}
+
+	os.Chdir(workdir)
+	err := exec.Command("nohup", parameter...).Start()
+	if err != nil {
+		return err
+	}
+	return nil
 }
