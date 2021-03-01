@@ -25,3 +25,14 @@ func GetAttrNamesFromBody(body []byte) ([]string, error) {
 
 	return sf.Schema.AttrNames, nil
 }
+
+func GetPublicSchemaIdFromBody(body []byte) (string, error) {
+	sf := SchemaFromId{}
+
+	err := json.Unmarshal(body, &sf)
+	if err != nil {
+		return "", err
+	}
+
+	return sf.Schema.ID, nil
+}

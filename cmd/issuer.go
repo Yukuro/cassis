@@ -237,6 +237,10 @@ func doAsIssuer() error {
 	case menuList[4]: //[TEST] issue-credential suddenly
 		fmt.Printf("issue credential...")
 
+		activeConnections, err := commander.GetActiveConnectionList(targetUrl)
+
+		connectionId, err := common.PromptSelect("Select ConnectionId", activeConnections)
+
 		publicDid, err := commander.GetPublicDid(targetUrl)
 		if err != nil {
 			return err
@@ -256,6 +260,11 @@ func doAsIssuer() error {
 		s := strings.Split(selectedCredDefList, ":")
 		schemaId := s[3]
 
+		publicSchemaId, err := commander.GetPublicSchemaId(targetUrl, schemaId)
+		if err != nil {
+			return err
+		}
+
 		attrNames, err := commander.GetAttributes(targetUrl, schemaId)
 		if err != nil {
 			return nil
@@ -271,8 +280,16 @@ func doAsIssuer() error {
 			enteredAttr[at] = value
 		}
 
-		fmt.Printf("Public did: %v\n Cred def: %v\n Selected %v\n", publicDid, credDefList, selectedCredDefList)
-		fmt.Printf("attr: %v \n", enteredAttr)
+		credExId, err := commander.IssueCredential(targetUrl, connectionId, enteredAttr, publicDid, publicSchemaId, selectedCredDefList)
+		if err != nil {
+			return err
+		}
+
+		//fmt.Printf("Public did: %v\n Cred def: %v\n Selected %v\n", publicDid, credDefList, selectedCredDefList)
+		//fmt.Printf("attr: %v \n", enteredAttr)
+		//fmt.Printf("ConnectionId:%v\nSchemaId:%v\nCredExId:%v\n", connectionId, publicSchemaId, credExId)
+
+		fmt.Printf("\nIssue Credential done! --> Cred_Ex_Id : %v\n", credExId)
 	}
 	return nil
 }
