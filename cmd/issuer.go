@@ -24,6 +24,7 @@ import (
 	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // issuerCmd represents the issuer command
@@ -51,6 +52,7 @@ func doAsIssuer() error {
 		"invite holder",
 		"schema",
 		"credential definition",
+		"[TEST] issue-credential suddenly",
 	}
 
 	currentAbsPath, err := filepath.Abs("./")
@@ -231,6 +233,46 @@ func doAsIssuer() error {
 		}
 
 		fmt.Printf("credential definition ( %v ) --> ledger done!", originatedCred_defId)
+
+	case menuList[4]: //[TEST] issue-credential suddenly
+		fmt.Printf("issue credential...")
+
+		publicDid, err := commander.GetPublicDid(targetUrl)
+		if err != nil {
+			return err
+		}
+		//fmt.Printf("Your publid did is %v\n", publicDid)
+
+		credDefList, err := commander.GetCredDefList(targetUrl)
+		if err != nil {
+			return nil
+		}
+
+		selectedCredDefList, err := common.PromptSelect("Select Credential Definition", credDefList)
+		if err != nil {
+			return nil
+		}
+
+		s := strings.Split(selectedCredDefList, ":")
+		schemaId := s[3]
+
+		attrNames, err := commander.GetAttributes(targetUrl, schemaId)
+		if err != nil {
+			return nil
+		}
+
+		fmt.Printf("\nEnter a value for the attribute name\n")
+		enteredAttr := map[string]string{}
+		for _, at := range attrNames {
+			value, err := common.PromptString(at)
+			if err != nil {
+				return err
+			}
+			enteredAttr[at] = value
+		}
+
+		fmt.Printf("Public did: %v\n Cred def: %v\n Selected %v\n", publicDid, credDefList, selectedCredDefList)
+		fmt.Printf("attr: %v \n", enteredAttr)
 	}
 	return nil
 }

@@ -2,6 +2,9 @@ package commander
 
 import (
 	"bytes"
+	get_credential_definitions_created "cli/src/get-credential-definitions-created"
+	get_schemas_schemaid "cli/src/get-schemas-schemaid"
+	get_wallet_did "cli/src/get-wallet-did"
 	"cli/src/issuer"
 	"encoding/json"
 	"fmt"
@@ -248,6 +251,102 @@ func OriginateCred_def(issuerUrl string, schemaId string) (string, error) {
 	}
 
 	return cred_defId, nil
+}
+
+func GetPublicDid(issuerUrl string) (string, error) {
+	req, err := http.NewRequest(
+		"GET",
+		issuerUrl+"/wallet/did",
+		nil,
+	)
+	if err != nil {
+		return "", err
+	}
+
+	req.Header.Set("accept", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", nil
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", nil
+	}
+
+	publicDid, err := get_wallet_did.AnalyzeWalletDid(body)
+	if err != nil {
+		return "", nil
+	}
+
+	return publicDid, nil
+}
+
+func GetCredDefList(issuerUrl string) ([]string, error) {
+	req, err := http.NewRequest(
+		"GET",
+		issuerUrl+"/credential-definitions/created",
+		nil,
+	)
+	if err != nil {
+		return []string{}, err
+	}
+
+	req.Header.Set("accept", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return []string{}, nil
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return []string{}, nil
+	}
+
+	CredDefList, err := get_credential_definitions_created.AnalyzeCreatedCredDef(body)
+	if err != nil {
+		return []string{}, nil
+	}
+
+	return CredDefList, nil
+}
+
+func GetAttributes(issuerUrl string, schemaId string) ([]string, error) {
+	req, err := http.NewRequest(
+		"GET",
+		issuerUrl+"/schemas/"+schemaId,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("accept", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, nil
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, nil
+	}
+
+	attrNames, err := get_schemas_schemaid.GetAttrNamesFromBody(body)
+	if err != nil {
+		return nil, nil
+	}
+
+	return attrNames, nil
 }
 
 func getSeedList(agentNameList []string) (map[string]string, error) {
