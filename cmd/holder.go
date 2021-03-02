@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"path/filepath"
+	"time"
 )
 
 // holderCmd represents the holder command
@@ -83,6 +84,39 @@ func doAsHolder() error {
 		}
 		fmt.Printf("%v %v\n", targetUrl, invitation) //tmp
 	case menuList[2]: // "send proposal"
+		fmt.Println("send proposal...")
+	case menuList[3]: // "send request"
+		fmt.Println("send request...")
+	case menuList[4]: // "store credential"
+		fmt.Println("store credential...")
+
+		credExIdList, err := commander.GetOfferCredExIdList(targetUrl)
+		if err != nil {
+			return err
+		}
+
+		//選択している時点でrequestする可否は問えているとみなす
+		fmt.Printf("\n[offer box]\n")
+		targetCredExId, err := common.PromptSelect("Select target cred_ex_id", credExIdList)
+		if err != nil {
+			return err
+		}
+
+		//request-credential
+		err = commander.SendRequest(targetUrl, targetCredExId)
+		if err != nil {
+			return err
+		}
+
+		fmt.Println("Waiting for the procedure to next state...")
+		time.Sleep(time.Second * 3)
+
+		credId, err := commander.StoreCredential(targetUrl, targetCredExId)
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("\nCredential stored --> Credential ID :%v\n", credId)
 	}
 
 	return nil

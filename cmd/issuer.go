@@ -193,7 +193,7 @@ func doAsIssuer() error {
 			//選択したschemaのパーサー書く
 			//選択したschemaでoriginate
 		}
-	case menuList[3]: // "register credential definition"
+	case menuList[3]: // "credential definition"
 		fmt.Println("originate credential definition")
 		conf, err := agent.AnalyzeIssuerConf(".cassis")
 		if err != nil {
@@ -222,6 +222,7 @@ func doAsIssuer() error {
 		sc := conf[selectedIndex]
 		//fmt.Printf("%v %v %v\n", sc["name"], sc["version"], sc["id"])
 
+		fmt.Println("Originating...")
 		originatedCred_defId, err := commander.OriginateCred_def(targetUrl+"/credential-definitions", sc["id"])
 		if err != nil {
 			return err
@@ -232,7 +233,7 @@ func doAsIssuer() error {
 			return err
 		}
 
-		fmt.Printf("credential definition ( %v ) --> ledger done!", originatedCred_defId)
+		fmt.Printf("credential definition ( %v ) --> ledger originated!", originatedCred_defId)
 
 	case menuList[4]: //[TEST] issue-credential suddenly
 		fmt.Printf("issue credential...")
