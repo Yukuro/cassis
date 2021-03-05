@@ -24,6 +24,7 @@ import (
 	"github.com/spf13/cobra"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // issuerCmd represents the issuer command
@@ -51,6 +52,7 @@ func doAsIssuer() error {
 		"invite holder",
 		"schema",
 		"credential definition",
+		"[TEST] issue-credential suddenly",
 	}
 
 	currentAbsPath, err := filepath.Abs("./")
@@ -71,7 +73,7 @@ func doAsIssuer() error {
 	//Issuer選択
 	//network inviteから流用
 	//将来的には.cassis/config.ymlから読む
-	adminPort, err := commander.GetAdminPortFromWorkdir(currentAbsPath)
+	adminPort, err := commander.GetAdminPortFromWorkdir("issuer", currentAbsPath)
 	if err != nil {
 		return err
 	}
@@ -191,7 +193,7 @@ func doAsIssuer() error {
 			//選択したschemaのパーサー書く
 			//選択したschemaでoriginate
 		}
-	case menuList[3]: // "register credential definition"
+	case menuList[3]: // "credential definition"
 		fmt.Println("originate credential definition")
 		conf, err := agent.AnalyzeIssuerConf(".cassis")
 		if err != nil {
@@ -220,6 +222,7 @@ func doAsIssuer() error {
 		sc := conf[selectedIndex]
 		//fmt.Printf("%v %v %v\n", sc["name"], sc["version"], sc["id"])
 
+		fmt.Println("Originating...")
 		originatedCred_defId, err := commander.OriginateCred_def(targetUrl+"/credential-definitions", sc["id"])
 		if err != nil {
 			return err
@@ -230,7 +233,64 @@ func doAsIssuer() error {
 			return err
 		}
 
-		fmt.Printf("credential definition ( %v ) --> ledger done!", originatedCred_defId)
+		fmt.Printf("credential definition ( %v ) --> ledger originated!", originatedCred_defId)
+
+	case menuList[4]: //[TEST] issue-credential suddenly
+		fmt.Printf("issue credential...")
+
+		activeConnections, err := commander.GetActiveConnectionList(targetUrl)
+
+		connectionId, err := common.PromptSelect("Select ConnectionId", activeConnections)
+
+		publicDid, err := commander.GetPublicDid(targetUrl)
+		if err != nil {
+			return err
+		}
+		//fmt.Printf("Your publid did is %v\n", publicDid)
+
+		credDefList, err := commander.GetCredDefList(targetUrl)
+		if err != nil {
+			return nil
+		}
+
+		selectedCredDefList, err := common.PromptSelect("Select Credential Definition", credDefList)
+		if err != nil {
+			return nil
+		}
+
+		s := strings.Split(selectedCredDefList, ":")
+		schemaId := s[3]
+
+		publicSchemaId, err := commander.GetPublicSchemaId(targetUrl, schemaId)
+		if err != nil {
+			return err
+		}
+
+		attrNames, err := commander.GetAttributes(targetUrl, schemaId)
+		if err != nil {
+			return nil
+		}
+
+		fmt.Printf("\nEnter a value for the attribute name\n")
+		enteredAttr := map[string]string{}
+		for _, at := range attrNames {
+			value, err := common.PromptString(at)
+			if err != nil {
+				return err
+			}
+			enteredAttr[at] = value
+		}
+
+		credExId, err := commander.IssueCredential(targetUrl, connectionId, enteredAttr, publicDid, publicSchemaId, selectedCredDefList)
+		if err != nil {
+			return err
+		}
+
+		//fmt.Printf("Public did: %v\n Cred def: %v\n Selected %v\n", publicDid, credDefList, selectedCredDefList)
+		//fmt.Printf("attr: %v \n", enteredAttr)
+		//fmt.Printf("ConnectionId:%v\nSchemaId:%v\nCredExId:%v\n", connectionId, publicSchemaId, credExId)
+
+		fmt.Printf("\nIssue Credential done! --> Cred_Ex_Id : %v\n", credExId)
 	}
 	return nil
 }

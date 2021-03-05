@@ -2,8 +2,17 @@ package commander
 
 import (
 	"bytes"
+	get_connections "cli/src/get-connections"
+	get_credential_definitions_created "cli/src/get-credential-definitions-created"
+	get_issuecredential_records "cli/src/get-issuecredential-records"
+	get_schemas_schemaid "cli/src/get-schemas-schemaid"
+	get_wallet_did "cli/src/get-wallet-did"
 	"cli/src/issuer"
+	post_issuecredential_records_credexid_sendrequest "cli/src/post-issuecredential-records-credexid-sendrequest"
+	post_issuecredential_records_credexid_store "cli/src/post-issuecredential-records-credexid-store"
+	post_issuecredential_send "cli/src/post-issuecredential-send"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
@@ -140,6 +149,37 @@ func InvitationToHolder(targetUrl string, agentName string) (string, string, err
 	return connectionId, string(bytes), nil
 }
 
+func ReceiveInvitation(targetUrl string, invitation string) error {
+	targetUrl = targetUrl + "/connections/receive-invitation"
+
+	jsonData := []byte(invitation)
+
+	req, err := http.NewRequest(
+		"POST",
+		targetUrl,
+		bytes.NewBuffer(jsonData),
+	)
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	_, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func OriginateSchema(issuerUrl string, schemaName string, schemaVersion string, schemaAttr []string) (string, string, []string, string, error) {
 	jsonData, err := issuer.PackSchema(schemaName, schemaVersion, schemaAttr)
 	if err != nil {
@@ -217,6 +257,324 @@ func OriginateCred_def(issuerUrl string, schemaId string) (string, error) {
 	}
 
 	return cred_defId, nil
+}
+
+func GetActiveConnectionList(issuerUrl string) ([]string, error) {
+	req, err := http.NewRequest(
+		"GET",
+		issuerUrl+"/connections",
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("accept", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	activeConnections, err := get_connections.GetActiveConnections(body)
+	if err != nil {
+		return nil, err
+	}
+
+	return activeConnections, nil
+}
+
+func GetPublicDid(issuerUrl string) (string, error) {
+	req, err := http.NewRequest(
+		"GET",
+		issuerUrl+"/wallet/did",
+		nil,
+	)
+	if err != nil {
+		return "", err
+	}
+
+	req.Header.Set("accept", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", nil
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", nil
+	}
+
+	publicDid, err := get_wallet_did.AnalyzeWalletDid(body)
+	if err != nil {
+		return "", nil
+	}
+
+	return publicDid, nil
+}
+
+func GetCredDefList(issuerUrl string) ([]string, error) {
+	req, err := http.NewRequest(
+		"GET",
+		issuerUrl+"/credential-definitions/created",
+		nil,
+	)
+	if err != nil {
+		return []string{}, err
+	}
+
+	req.Header.Set("accept", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return []string{}, nil
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return []string{}, nil
+	}
+
+	CredDefList, err := get_credential_definitions_created.AnalyzeCreatedCredDef(body)
+	if err != nil {
+		return []string{}, nil
+	}
+
+	return CredDefList, nil
+}
+
+func GetPublicSchemaId(issuerUrl string, schemaId string) (string, error) {
+	req, err := http.NewRequest(
+		"GET",
+		issuerUrl+"/schemas/"+schemaId,
+		nil,
+	)
+	if err != nil {
+		return "", err
+	}
+
+	req.Header.Set("accept", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	publicSchemaId, err := get_schemas_schemaid.GetPublicSchemaIdFromBody(body)
+	if err != nil {
+		return "", err
+	}
+
+	return publicSchemaId, nil
+}
+
+func GetAttributes(issuerUrl string, schemaId string) ([]string, error) {
+	req, err := http.NewRequest(
+		"GET",
+		issuerUrl+"/schemas/"+schemaId,
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("accept", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	attrNames, err := get_schemas_schemaid.GetAttrNamesFromBody(body)
+	if err != nil {
+		return nil, err
+	}
+
+	return attrNames, nil
+}
+
+func IssueCredential(issuerUrl string, connectionId string, attributes map[string]string, issuerDid string, schemaId string, credDefId string) (string, error) {
+	jsonData, err := post_issuecredential_send.PackIssueCredential(connectionId, attributes, issuerDid, schemaId, credDefId)
+	if err != nil {
+		return "", err
+	}
+
+	//fmt.Printf("\n%v\n", string(jsonData))
+
+	req, err := http.NewRequest(
+		"POST",
+		issuerUrl+"/issue-credential/send",
+		bytes.NewBuffer([]byte(jsonData)),
+	)
+	if err != nil {
+		return "", err
+	}
+
+	//fmt.Printf("POST\n%v\n", string(jsonData))
+
+	req.Header.Set("accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	credExId, err := post_issuecredential_send.AnalyzeResponse(body)
+	if err != nil {
+		return "", err
+	}
+
+	//fmt.Printf(credExId)
+
+	return credExId, nil
+}
+
+// for holder
+func GetOfferCredExIdList(issuerUrl string) ([]string, error) {
+	req, err := http.NewRequest(
+		"GET",
+		issuerUrl+"/issue-credential/records",
+		nil,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("accept", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	credExIdList, err := get_issuecredential_records.GetOfferCredExIdListFromBody(body)
+	if err != nil {
+		return nil, err
+	}
+
+	return credExIdList, nil
+}
+
+func SendRequest(issuerUrl string, credExId string) error {
+	req, err := http.NewRequest(
+		"POST",
+		issuerUrl+"/issue-credential/records/"+credExId+"/send-request",
+		nil,
+	)
+	if err != nil {
+		return err
+	}
+
+	//fmt.Printf("POST\n%v\n", string(jsonData))
+
+	req.Header.Set("accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	state, err := post_issuecredential_records_credexid_sendrequest.GetStateFromBody(body)
+
+	if state != "request_sent" {
+		return errors.New("invalid state")
+	}
+
+	return nil
+}
+
+func StoreCredential(issuerUrl string, credExId string) (string, error) {
+	//jsonData, err := post_issuecredential_records_credexid_store.PackStoreCredential()
+	//if err != nil {
+	//	return "", err
+	//}
+
+	//fmt.Printf("\n%v\n", string(jsonData))
+
+	req, err := http.NewRequest(
+		"POST",
+		issuerUrl+"/issue-credential/records/"+credExId+"/store",
+		nil,
+	)
+	if err != nil {
+		return "", err
+	}
+
+	//fmt.Printf("POST\n%v\n", string(jsonData))
+
+	req.Header.Set("accept", "application/json")
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	// TODO remove
+	//fmt.Println(string(body))
+
+	credId, err := post_issuecredential_records_credexid_store.GetCredentialIdFromBody(body)
+	if err != nil {
+		return "", err
+	}
+
+	return credId, nil
 }
 
 func getSeedList(agentNameList []string) (map[string]string, error) {

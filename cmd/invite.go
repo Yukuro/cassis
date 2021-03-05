@@ -60,7 +60,7 @@ func inviteHolder() error {
 		return err
 	}
 
-	adminPort, err := commander.GetAdminPortFromWorkdir(workdir)
+	adminPort, err := commander.GetAdminPortFromWorkdir("holder", workdir)
 	if err != nil {
 		return err
 	}

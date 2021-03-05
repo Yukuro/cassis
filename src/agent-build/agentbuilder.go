@@ -146,7 +146,7 @@ func BuildAgent() error {
 
 	// TODO IPアドレスを動的に取得する
 	// TODO Ledgerのlocalhost指定で行けるかどうか試す
-	err = agent_docker_compose.ConvertFromGraph(dotFilepath, workdir, networkName, "192.168.3.15", agentNameAndSeed, ngrokUrlList)
+	err = agent_docker_compose.ConvertFromGraph(dotFilepath, workdir, networkName, "192.168.3.11", agentNameAndSeed, ngrokUrlList)
 	if err != nil {
 		return err
 	}

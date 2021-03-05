@@ -42,7 +42,7 @@ func RemoveAllDockerImages() error {
 	return nil
 }
 
-func GetAdminPortFromWorkdir(workdir string) (map[string]string, error) {
+func GetAdminPortFromWorkdir(mode string, workdir string) (map[string]string, error) {
 	//d := filepath.Dir(workdir)
 	dirName := filepath.Base(workdir)
 
@@ -72,6 +72,25 @@ func GetAdminPortFromWorkdir(workdir string) (map[string]string, error) {
 	nodeNameAndPort := map[string]string{}
 
 	for _, node := range nodeName {
+		switch mode {
+		case "issuer":
+			if node[:len(node)-1] != "issuer" {
+				continue
+			}
+		case "holder":
+			if node[:len(node)-1] != "holder" {
+				continue
+			}
+		case "verifier":
+			if node[:len(node)-1] != "verifier" {
+				continue
+			}
+		case "custom":
+			if node[:len(node)-1] != "custom" {
+				continue
+			}
+		}
+
 		containerName := fmt.Sprintf("%v_%v_1", dirName, node)
 
 		parameter := []string{
