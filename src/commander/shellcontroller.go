@@ -114,9 +114,8 @@ func ExposeNgrok8001To8006(workdir string) error {
 		"-config",
 		"/home/tuple/GolandProjects/cli/config-ngrok.yml",
 		"issuer1",
-		"issuer2",
 		"holder1",
-		"holder2",
+		"verifier1",
 	}
 
 	os.Chdir(workdir)

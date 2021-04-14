@@ -100,6 +100,8 @@ func ConvertFromGraph(dotPath string, workdir string, networkName string, myIPAd
 
 			// ~~TODO interfaceとか使って書く~~
 			// TODO yamlのunmarshalする構造体を配列を使って書いて、頭の悪さを払拭する
+			// TODO :2021/03/06 :SSHポートフォワーディング等を使用して、無限にURLを生成する
+			// NOTE : ngrokの制約により、Issuer x1(:8001) / Holder x1(:8004) / Verifier x1(:8007)
 			switch issuerNum {
 			case 1:
 				d.Services.Issuer1.Build.Context = "./aries-cloudagent-python"
@@ -107,12 +109,12 @@ func ConvertFromGraph(dotPath string, workdir string, networkName string, myIPAd
 				d.Services.Issuer1.Ports = []string{"8001:8000", "11000-11999:11000"}
 				d.Services.Issuer1.Command = getAgentCommand(node.Name, myIPAddress, seed, ngrokUrlList["issuer1"])
 				d.Services.Issuer1.Volumes = []string{"./aries-cloudagent-python/logs/:/home/indy/logs"}
-			case 2:
-				d.Services.Issuer2.Build.Context = "./aries-cloudagent-python"
-				d.Services.Issuer2.Build.Dockerfile = "./docker/Dockerfile.run"
-				d.Services.Issuer2.Ports = []string{"8002:8000", "11000-11999:11000"}
-				d.Services.Issuer2.Command = getAgentCommand(node.Name, myIPAddress, seed, ngrokUrlList["issuer2"])
-				d.Services.Issuer2.Volumes = []string{"./aries-cloudagent-python/logs/:/home/indy/logs"}
+				//case 2:
+				//	d.Services.Issuer2.Build.Context = "./aries-cloudagent-python"
+				//	d.Services.Issuer2.Build.Dockerfile = "./docker/Dockerfile.run"
+				//	d.Services.Issuer2.Ports = []string{"8002:8000", "11000-11999:11000"}
+				//	d.Services.Issuer2.Command = getAgentCommand(node.Name, myIPAddress, seed, ngrokUrlList["issuer2"])
+				//	d.Services.Issuer2.Volumes = []string{"./aries-cloudagent-python/logs/:/home/indy/logs"}
 				//case 3:
 				//	d.Services.Issuer3.Build.Context = "./aries-cloudagent-python"
 				//	d.Services.Issuer3.Build.Dockerfile = "./docker/Dockerfile.run"
@@ -130,12 +132,12 @@ func ConvertFromGraph(dotPath string, workdir string, networkName string, myIPAd
 				d.Services.Holder1.Ports = []string{"8004:8000", "11000-11999:11000"}
 				d.Services.Holder1.Command = getAgentCommand(node.Name, myIPAddress, seed, ngrokUrlList["holder1"])
 				d.Services.Holder1.Volumes = []string{"./aries-cloudagent-python/logs/:/home/indy/logs"}
-			case 2:
-				d.Services.Holder2.Build.Context = "./aries-cloudagent-python"
-				d.Services.Holder2.Build.Dockerfile = "./docker/Dockerfile.run"
-				d.Services.Holder2.Ports = []string{"8005:8000", "11000-11999:11000"}
-				d.Services.Holder2.Command = getAgentCommand(node.Name, myIPAddress, seed, ngrokUrlList["holder2"])
-				d.Services.Holder2.Volumes = []string{"./aries-cloudagent-python/logs/:/home/indy/logs"}
+				//case 2:
+				//	d.Services.Holder2.Build.Context = "./aries-cloudagent-python"
+				//	d.Services.Holder2.Build.Dockerfile = "./docker/Dockerfile.run"
+				//	d.Services.Holder2.Ports = []string{"8005:8000", "11000-11999:11000"}
+				//	d.Services.Holder2.Command = getAgentCommand(node.Name, myIPAddress, seed, ngrokUrlList["holder2"])
+				//	d.Services.Holder2.Volumes = []string{"./aries-cloudagent-python/logs/:/home/indy/logs"}
 				//case 3:
 				//	d.Services.Holder3.Build.Context = "./aries-cloudagent-python"
 				//	d.Services.Holder3.Build.Dockerfile = "./docker/Dockerfile.run"
@@ -147,7 +149,14 @@ func ConvertFromGraph(dotPath string, workdir string, networkName string, myIPAd
 
 		case "Verifier":
 			verifierNum += 1
-			//fmt.Printf("%v is Verifier\n", node.Name)
+			switch verifierNum {
+			case 1:
+				d.Services.Verifier1.Build.Context = "./aries-cloudagent-python"
+				d.Services.Verifier1.Build.Dockerfile = "./docker/Dockerfile.run"
+				d.Services.Verifier1.Ports = []string{"8007:8000", "11000-11999:11000"}
+				d.Services.Verifier1.Command = getAgentCommand(node.Name, myIPAddress, seed, ngrokUrlList["verifier1"])
+				d.Services.Verifier1.Volumes = []string{"./aries-cloudagent-python/logs/:/home/indy/logs"}
+			}
 
 		}
 	}
